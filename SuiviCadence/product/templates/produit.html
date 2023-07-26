@@ -1,0 +1,308 @@
+{% extends 'base_template.html' %}
+{% load static %}
+
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Inclure la bibliothèque Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Inclure la bibliothèque Moment.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+
+
+
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Diviser horizontalement en trois parties */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .partie1, .partie2, .partie3 {
+            flex: 1;
+            display: flex;
+            flex-direction: row; /* Modification ici pour afficher les sous-parties verticalement */
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Diviser verticalement la partie 1 en trois */
+        .partie1 .sous-partie {
+            flex: 1;
+            margin: 10px;
+        }
+
+        /* Diviser la partie 2 en deux (1/3 et 2/3) */
+        .partie2 .sous-partie1 {
+            flex: 1;
+            margin: 10px;
+        }
+
+        .partie2 .sous-partie2 {
+            flex: 2;
+            margin: 10px;
+        }
+
+        /* Diviser la partie 3 en deux */
+        .partie3 .sous-partie {
+            flex: 1;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Détails du produit </div> </br></br>
+        <div class="partie1">
+            <div class="sous-partie"></div>
+            <div class="sous-partie">
+                <h2>Production RFM Semaine  {{ numero_semaine }}</h2>
+                {% if produit.photo %}
+                    <img src="{% static 'images/'%}{{ produit.photo }}" alt="{{ produit.nom }}" height="300">  
+                {% else %}
+                    <p>Aucune image disponible pour ce produit.</p>
+                {% endif %}
+               
+                <h3>{{ produit.reference }}</h3>
+                <h3>{{ produit.nom }}</h3>
+            </div>
+            <div class="sous-partie"></div>
+        </div>
+        <div class="partie2">
+            <div class="sous-partie1">
+
+                <table id="tbl" class="content-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Date de début</th>
+                            <th>Date de fin</th>
+                            <th>Quantité</th>
+                            <th>Modifier</th>
+                            <th>Supprimer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if produit.objectif_hebdo %}
+                            <tr>
+                                <td>{{ objectif_hebdo.client }}</td>
+                                <td>{{ objectif_hebdo.date_debut }}</td>
+                                <td>{{ objectif_hebdo.date_fin }}</td>
+                                <td>{{ objectif_hebdo.quantite }}</td>
+                                <td><a href="{% url 'modifier_objectif_hebdo' objectif_hebdo.id %}">Modifier</a></td>
+                                <td><a href="{% url 'supprimer_objectif_hebdo' objectif_hebdo.id %}">Supprimer</a></td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6">Aucun objectif hebdomadaire défini pour cette semaine.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                    
+                </table>
+
+
+            </div>
+            <div class="sous-partie2">
+                
+                        <table id="tbl" class="content-table">
+                            <thead>
+                                <tr>
+                                    <th>Takt théorique (h)</th>
+                                    <th>Takt Réel</th>
+                                    <th>Objectif Semaine</th>
+                                    <th>Progression théorique</th>
+                                    <th>Réalisé</th>
+                                    <th>Reste à faire</th>
+                                    <th>Retard</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ takt_theorique }}</td>
+                                    <td>{{ takt_reel }}</td>
+                                    <td>{{ objectif_hebdo.quantite }}</td>
+                                    <td>{{ progression_theorique }}</td>
+                                    <td>{{ total_realise }}</td>
+                                    <td>{{ reste_a_faire }}</td>
+                                    <td>{{ retard }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+        <div class="partie3">
+            <div class="sous-partie">
+                <canvas id="graphique1"></canvas>
+            </div>
+            <div class="sous-partie">
+                <canvas id="graphique2"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Coordonnées de l'origine
+            var x1 = 8;
+            var y1 = 0;
+    
+            // Coordonnées de la destination (objectif_hebdo/10, 18h) si objectif_hebdo est défini, sinon (0, 18h)
+            var objectif_hebdo = {{ objectif_hebdo.quantite }};
+            var x2 = 18;
+            var y2 = objectif_hebdo ? objectif_hebdo / 10 : 0;
+    
+            // Récupérer les mouvements du produit par heure et les formater en tant que nombres
+            var mouvements = [
+                {% for mouvement in mouvements_par_heure %}
+                    { x: {{ mouvement.0 }}, y: {{ mouvement.1 }} },
+                {% endfor %}
+            ];
+    
+            // Dessiner la courbe linéaire
+            var ctx = document.getElementById('graphique1').getContext('2d');
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['8h', '18h'],
+                    datasets: [
+                        {
+                            label: 'Courbe linéaire',
+                            data: [
+                                { x: x1, y: y1 },
+                                { x: x2, y: y2 }
+                            ],
+                            borderColor: 'blue',
+                            borderWidth: 2,
+                            fill: false
+                        },
+                        {
+                            label: 'Mouvements du produit',
+                            data: mouvements,
+                            borderColor: 'green',
+                            borderWidth: 2,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            min: 8,
+                            max: 18, // Changer la valeur max en fonction de la plage x que vous souhaitez afficher
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value + 'h';
+                                }
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            min: 0,
+                            max: 7,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+
+    <script>
+        $(document).ready(function () {
+            // Coordonnées de l'origine
+            var x1 = 8;
+            var y1 = 0;
+
+            // Coordonnées de la destination (objectif_hebdo/10, 18h) si objectif_hebdo est défini, sinon (0, 18h)
+            var objectif_hebdo = {{ objectif_hebdo.quantite }};
+            var x2 = 18;
+            var y2 = objectif_hebdo ? objectif_hebdo / 10 : 0;
+
+            // Récupérer les mouvements du produit par heure et les formater en tant que nombres
+            var mouvements = [
+                {% for mouvement in mouvements_par_heure %}
+                    { x: {{ mouvement.0 }}, y: {{ mouvement.1 }} },
+                {% endfor %}
+            ];
+
+            // Dessiner la courbe linéaire
+            var ctx = document.getElementById('graphique2').getContext('2d');
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['8h', '18h'],
+                    datasets: [
+                        {
+                            label: 'Courbe linéaire',
+                            data: [
+                                { x: x1, y: y1 },
+                                { x: x2, y: y2 }
+                            ],
+                            borderColor: 'blue',
+                            borderWidth: 2,
+                            fill: false
+                        },
+                        {
+                            label: 'Mouvements du produit',
+                            data: mouvements,
+                            borderColor: 'green',
+                            borderWidth: 2,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            min: 8,
+                            max: 18, // Changer la valeur max en fonction de la plage x que vous souhaitez afficher
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value + 'h';
+                                }
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            min: 0,
+                            max: 7,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    
+    
+    
+</body>
+</html>
+
+{% endblock %}

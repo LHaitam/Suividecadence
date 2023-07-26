@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    {% load static %}
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- Boxiocns CDN Link -->
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/produits/rfm.png' %}">
+    <script type="text/javascript"
+        src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=xSsau0J7CTMmKxmxEnkwciiwKLqmuIOmmRBd5QeLhyCVdJxc5oZWkoMx4jO3otF04BdEeyFo6_nCC5YupgDbCQ"
+        charset="UTF-8"></script>
+    <link rel="stylesheet" crossorigin="anonymous"
+        href="https://gc.kis.v2.scr.kaspersky-labs.com/E3E8934C-235A-4B0E-825A-35A08381A191/abn/main.css?attr=aHR0cHM6Ly9jZHBuLmlvL3BpeXVzaHBkL2Z1bGxwYWdlL3JOQkpaV0I" />
+    <style>
+
+        .green {
+            background-color: green;
+            color: white;
+            text-align: center;
+        }
+
+        /* Styles pour la case "KO" */
+        .red {
+            background-color: red;
+            color: white;
+            text-align: center;
+        }
+
+        
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar close">
+        <div class="logo-details">
+            <img src="{% static 'images/produits/rfm.png' %}" alt="Logo Collins Aerospace" class="logo_img" style="width: 50px; height: auto; margin: 15px;">
+<!--             <img src="../../static/images/produits/rfm.png" alt="Logo Collins Aerospace" class="logo_img" style="width: 50px; height: auto; margin: 15px;">
+ -->            <span class="logo_name">Collins Aerospace</span>
+        </div>
+        <ul class="nav-links">
+            <li>
+                <a href="#">
+                    <i class='bx bxs-dashboard' ></i>
+                    <span class="link_name">Dashboard</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="#">Dashboard</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <div class="iocn-link">
+                    <a href="#">
+                        <i class='bx bxl-product-hunt' ></i>
+                        <span class="link_name">Production</span>
+                    </a>
+                    <i class='bx bxs-chevron-down arrow'></i>
+                </div>
+                <ul class="sub-menu">
+                    <li><a class="link_name " href="#">Production</a></li>
+                    <li><a href="{% url 'liste_lignes_production' %}">Ligne de production</a></li>
+                    <li><a href="{% url 'liste_produits' %}">Produit</a></li>
+                </ul>
+            </li>
+
+            <!-- ... Autres liens ... -->
+
+        </ul>
+    </div>
+
+    <section class="home-section">
+        <div class="home-content">
+            <i class='bx bx-menu'></i>
+        </div>
+
+        <!-- Contenu spécifique à chaque page sera inséré ici -->
+        {% block content %}{% endblock %}
+
+    </section>
+
+    <script>
+        // JavaScript pour la barre latérale
+        let arrow = document.querySelectorAll(".arrow");
+        for (var i = 0; i < arrow.length; i++) {
+            arrow[i].addEventListener("click", (e) => {
+                let arrowParent = e.target.parentElement.parentElement;//selecting main parent of arrow
+                arrowParent.classList.toggle("showMenu");
+            });
+        }
+
+        let link_name = document.querySelectorAll(".link_name");
+        for (var i = 0; i < link_name.length; i++) {
+            link_name[i].addEventListener("click", (e) => {
+                let arrowParent = e.target.parentElement.parentElement;//selecting main parent of arrow
+                arrowParent.classList.toggle("showMenu");
+            });
+        }
+
+        let sidebar = document.querySelector(".sidebar");
+        let sidebarBtn = document.querySelector(".bx-menu");
+        console.log(sidebarBtn);
+        sidebarBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("close");
+        });
+    </script>
+
+</body>
+
+</html>
