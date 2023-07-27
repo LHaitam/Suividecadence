@@ -90,11 +90,11 @@ class Realisation(models.Model):
 # Modèle MouvementTempsReel pour représenter les mouvements de production en temps réel
 
 class MouvementTempsReel(models.Model):
-    produit = models.ForeignKey(Produit, on_delete=models.CASCADE)  # Le produit associé au mouvement
-    date_heure = models.DateTimeField(auto_now_add=True)  # La date et l'heure du mouvement
-    quantite = models.IntegerField()  # La quantité ajoutée ou soustraite dans le mouvement
-    utilisateur = models.ForeignKey(User, on_delete=models.CASCADE)  # L'utilisateur qui a enregistré le mouvement
-    soustraction = models.BooleanField(default=False)  # Un drapeau pour indiquer si la quantité est soustraite (True) ou ajoutée (False)
+    produit = models.ForeignKey(Produit, on_delete=models.CASCADE)
+    date_heure = models.DateTimeField(auto_now_add=True)
+    quantite = models.IntegerField()
+    utilisateur = models.ForeignKey(User, on_delete=models.CASCADE)
+    soustraction = models.BooleanField(default=False)
 
     def __str__(self):
         mouvement_type = "Soustraction" if self.soustraction else "Addition"

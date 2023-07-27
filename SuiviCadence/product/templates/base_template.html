@@ -14,17 +14,19 @@
         charset="UTF-8"></script>
     <link rel="stylesheet" crossorigin="anonymous"
         href="https://gc.kis.v2.scr.kaspersky-labs.com/E3E8934C-235A-4B0E-825A-35A08381A191/abn/main.css?attr=aHR0cHM6Ly9jZHBuLmlvL3BpeXVzaHBkL2Z1bGxwYWdlL3JOQkpaV0I" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
     <style>
 
         .green {
-            background-color: green;
+            background-color: #4CAF50;
             color: white;
             text-align: center;
         }
 
         /* Styles pour la case "KO" */
         .red {
-            background-color: red;
+            background-color: #e74c3c;
             color: white;
             text-align: center;
         }
@@ -62,12 +64,12 @@
                 </div>
                 <ul class="sub-menu">
                     <li><a class="link_name " href="#">Production</a></li>
-                    <li><a href="{% url 'liste_lignes_production' %}">Ligne de production</a></li>
-                    <li><a href="{% url 'liste_produits' %}">Produit</a></li>
+                    <li><a href="{% url 'liste_lignes_production' %}">Lignes de production</a></li>
+                    <li><a href="{% url 'liste_produits' %}">Produits</a></li>
+                    <li><a href="{% url 'liste_objectifs_hebdo' %}">Objecifs</a></li>
+                    <li><a href="{% url 'liste_mouvements' %}">Mouvements</a></li>
                 </ul>
             </li>
-
-            <!-- ... Autres liens ... -->
 
         </ul>
     </div>

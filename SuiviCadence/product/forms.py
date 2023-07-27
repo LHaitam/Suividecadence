@@ -73,7 +73,7 @@ class EtatLigneForm(forms.ModelForm):
 class MouvementForm(forms.ModelForm):
     class Meta:
         model = MouvementTempsReel
-        exclude = ('date_heure',)  # Exclure le champ "date_heure" du formulaire
+        exclude = ('date_heure',)
         labels = {
             'quantite': 'Quantité',
             'commentaire': 'Commentaire',
@@ -81,9 +81,9 @@ class MouvementForm(forms.ModelForm):
         widgets = {
             'quantite': forms.NumberInput(attrs={'class': 'form-control'}),
             'commentaire': forms.TextInput(attrs={'class': 'form-control'}),
+            'soustraction': forms.CheckboxInput(),  # Ajoutez cette ligne pour la case à cocher
         }
-
-
+        
 
 ####################################################################################################################
 #Objectif Hebdo form 

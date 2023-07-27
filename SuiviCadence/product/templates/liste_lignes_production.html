@@ -3,6 +3,7 @@
 {% block content %}
 <div class="container">
     <div class="title">Liste des Lignes de Production</div> </br></br>
+    <a href="{% url 'ajouter_ligne_production' %}"><button class="ajouter" style="background-color: #4CAF50; height: 40px;" ><i class="fas fa-plus"></i></button></a>
 
     <table id="tbl" class="content-table">
         <thead>
@@ -39,7 +40,6 @@
             {% endfor %}
         </tbody>
     </table>
-    <a href="{% url 'ajouter_ligne_production' %}"><button class="ajouter" style="background-color: #4CAF50; height: 40px;" >Ajouter une nouvelle ligne de production +</button></a>
 
 </div>
 {% endblock %}

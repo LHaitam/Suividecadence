@@ -68,13 +68,13 @@
 
 </style>
 <div class="container">
-    <div class="title">Supprimer l'objectif hebdomadaire</div> </br></br>
-    <p>Voulez-vous vraiment supprimer cet objectif  ?</p>
+    <div class="title">Supprimer le mouvement</div> </br></br>
+    <p>Voulez-vous vraiment supprimer ce mouvement  ?</p>
     <form method="post" style="display: inline;">
         {% csrf_token %}
         <button type="submit" class="supprimer">Confirmer</button>
     </form>
-    <a href="{% url 'liste_objectifs_hebdo' %}">
+    <a href="{% url 'liste_mouvements' %}">
         <button class="annuler">Annuler</button>
     </a>
 </div>

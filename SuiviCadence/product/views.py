@@ -555,6 +555,22 @@ def modifier_etat_ligne(request, pk):
 
 
 ####################################################################################################################
+#Vue pour lister Mouvement
+
+
+def liste_mouvements(request):
+    # Récupérer les mouvements triés par date_heure (du plus récent au plus ancien)
+    mouvements = MouvementTempsReel.objects.all().order_by('-date_heure')
+
+    context = {
+        'mouvements': mouvements
+    }
+
+    return render(request, 'liste_mouvements.html', context)    # Récupérer tous les mouvements de la base de données
+
+
+
+####################################################################################################################
 #Vue pour ajouter Mouvement
 
 
@@ -568,7 +584,7 @@ def ajouter_mouvement(request):
             form.instance.date_heure = date_heure_actuelles
             # Sauvegarder le formulaire avec les données automatiques
             form.save()
-            return redirect('nom_de_la_vue_de_confirmation')
+            return redirect('liste_mouvements')
     else:
         form = MouvementForm()
 
@@ -578,6 +594,62 @@ def ajouter_mouvement(request):
 
     return render(request, 'ajouter_mouvement.html', context)
 
+
+####################################################################################################################
+#Vue pour modifier Mouvement
+
+
+def modifier_mouvement(request, mouvement_id):
+    mouvement = get_object_or_404(MouvementTempsReel, id=mouvement_id)
+
+    if request.method == 'POST':
+        form = MouvementForm(request.POST, instance=mouvement)
+        if form.is_valid():
+            mouvement = form.save()
+            return redirect('liste_mouvements')
+    else:
+        form = MouvementForm(instance=mouvement)
+
+    context = {
+        'form': form
+    }
+    return render(request, 'modifier_mouvement.html', context)
+
+
+####################################################################################################################
+#Vue pour supprimer Mouvement
+
+def supprimer_mouvement(request, mouvement_id):
+    mouvement = get_object_or_404(MouvementTempsReel, pk=mouvement_id)
+
+    # Vérifier si la requête est de type POST, c'est-à-dire si le formulaire de confirmation a été soumis
+    if request.method == 'POST':
+        # Supprimer le mouvement de la base de données
+        mouvement.delete()
+        # Rediriger l'utilisateur vers une autre page après la suppression réussie
+        return redirect('liste_mouvements')
+
+    context = {
+        'mouvement': mouvement
+    }
+    return render(request, 'supprimer_mouvement.html', context)
+
+
+####################################################################################################################
+#Vue pour lister Objectif Hebdo
+
+
+def liste_objectifs_hebdo(request):
+    # Récupérer tous les objectifs hebdomadaires de la base de données
+    objectifs = ObjectifHebdo.objects.all()
+
+    # Préparer le contexte pour le rendu du template avec la liste des objectifs
+    context = {
+        'objectifs': objectifs,
+    }
+
+    # Rendre le template avec la liste des objectifs et le contexte
+    return render(request, 'liste_objectifs_hebdo.html', context)
 
 ####################################################################################################################
 #Vue pour ajouter Objectif Hebdo
@@ -594,7 +666,7 @@ def ajouter_objectif_hebdo(request):
                 # Sauvegarder le nouvel objectif hebdomadaire dans la base de données
                 objectif_hebdo = form.save()
                 # Rediriger l'utilisateur vers la page de détails du nouvel objectif hebdomadaire
-                return redirect('details_objectif_hebdo', pk=objectif_hebdo.pk)
+                return redirect('liste_objectifs_hebdo', pk=objectif_hebdo.pk)
 
         else:
             # Si la requête n'est pas de type POST, créer une instance vide du formulaire
@@ -661,29 +733,17 @@ def modifier_objectif_hebdo(request, pk):
 #Vue pour supprimer Objectif Hebdo
 
 
-def supprimer_objectif_hebdo(request, pk):
-    try:
-        # Récupérer l'objectif hebdomadaire existant en fonction de la clé primaire (pk) passée dans l'URL
-        objectif_hebdo = get_object_or_404(ObjectifHebdo, pk=pk)
+def supprimer_objectif_hebdo(request, objectif_hebdo_id):
+    objectif_hebdo = get_object_or_404(ObjectifHebdo, pk=objectif_hebdo_id)
 
-        # Vérifier si la requête est de type POST, c'est-à-dire si le formulaire a été soumis
-        if request.method == 'POST':
-            # Supprimer l'objectif hebdomadaire de la base de données
-            objectif_hebdo.delete()
-            # Rediriger l'utilisateur vers la liste des objectifs hebdomadaires ou une autre page appropriée
-            return redirect('liste_objectifs_hebdo')
+    # Vérifier si la requête est de type POST, c'est-à-dire si le formulaire de confirmation a été soumis
+    if request.method == 'POST':
+        # Supprimer l'objectif hebdomadaire de la base de données
+        objectif_hebdo.delete()
+        # Rediriger l'utilisateur vers une autre page après la suppression réussie
+        return redirect('liste_objectifs_hebdo')
 
-        # Préparer le contexte pour le rendu du template avec l'objectif hebdomadaire à supprimer
-        context = {
-            'objectif_hebdo': objectif_hebdo,
-            'titre': 'Supprimer l\'objectif hebdomadaire',
-        }
-
-        # Rendre le template avec le contexte
-        return render(request, 'supprimer_objectif_hebdo.html', context)
-
-    except Exception as e:
-        # Gérer toutes les autres exceptions non spécifiées ci-dessus
-        # Par exemple, si une erreur de base de données se produit, une erreur 500 sera renvoyée
-        # Vous pouvez personnaliser la gestion des exceptions ici en fonction de vos besoins
-        raise Http404("Une erreur s'est produite lors de la suppression de l'objectif hebdomadaire.")
+    context = {
+        'objectif_hebdo': objectif_hebdo
+    }
+    return render(request, 'supprimer_objectif_hebdo.html', context)

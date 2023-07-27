@@ -3,6 +3,39 @@
 
 {% block content %}
 <style>
+    /* title  */
+
+
+    .container {
+        height: 100%;
+        width: 100%;
+        background-color: whitesmoke;
+        padding: 25px 30px;
+        margin-bottom: 0px;
+    }
+
+    .title {
+        font-size: 25px;
+        font-weight: 500;
+        position: relative;
+    }
+
+    .title::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 3px;
+        width: 30px;
+        border-radius: 5px;
+        background: linear-gradient(135deg, #f58490, #CE1126);
+    }
+
+
+
+
+
+
     .form-container {
         max-width: 500px;
         margin: 0 auto;
@@ -24,6 +57,7 @@
     }
 
     .form-group input[type="text"],
+    .form-group select,
     input[type="submit"] {
         height: 40px;
         width: 20%;
@@ -81,28 +115,15 @@
         margin-bottom: 20px;
     }
 
+    
 
-
-    a {
-        color: #007bff;
-        /* Couleur du texte du lien */
-        text-decoration: none;
-        /* Pas de soulignement */
-        transition: color 0.3s ease;
-        /* Transition fluide de la couleur lors du survol */
-    }
 </style>
 <div class="container">
-    <div class="title">Ajouter un nouvel objectif hebdomadaire</div> </br></br>
+    <div class="title">Modifier le Mouvement</div> </br></br>
     <form method="post">
-        <div class="form-group">
-            {% csrf_token %}
-            {{ form.as_p }}
-        </div>
-        <input type="submit" value="Ajouter">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Enregistrer">
     </form>
-
 </div>
-</div>
-
 {% endblock %}

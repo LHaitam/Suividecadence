@@ -159,78 +159,6 @@
             </div>
         </div>
         <script>
-        // Coordonnées de l'origine
-        var x1 = 8;
-        var y1 = 0;
-
-        // Coordonnées de la destination (objectif_hebdo/10, 18h) si objectif_hebdo est défini, sinon (0, 18h)
-        var objectif_hebdo = {{ produit_data.objectif_hebdo.quantite }};
-        var x2 = 18;
-        var y2 = objectif_hebdo ? objectif_hebdo / 10 : 0;
-
-        // Récupérer les mouvements du produit par heure et les formater en tant que nombres
-        var mouvements = [
-            {% for mouvement in produit_data.mouvements_par_heure %}
-                { x: {{ mouvement.0 }}, y: {{ mouvement.1 }} },
-            {% endfor %}
-        ];
-
-        console.log("Coordonnées des mouvements :", mouvements);
-        // Dessiner la courbe linéaire
-        var ctx1 = document.getElementById('graphique1-{{ forloop.counter }}').getContext('2d');
-        var chart1 = new Chart(ctx1, {
-            type: 'line',
-            data: {
-                labels: ['8h', '18h'],
-                datasets: [
-                    {
-                        label: 'Courbe linéaire',
-                        data: [
-                            { x: x1, y: y1 },
-                            { x: x2, y: y2 }
-                        ],
-                        borderColor: 'blue',
-                        borderWidth: 2,
-                        fill: false
-                    },
-                    {
-                        label: 'Mouvements du produit',
-                        data: mouvements,
-                        borderColor: 'green',
-                        borderWidth: 2,
-                        fill: false
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        type: 'linear',
-                        position: 'bottom',
-                        min: 8,
-                        max: 18, // Changer la valeur max en fonction de la plage x que vous souhaitez afficher
-                        ticks: {
-                            callback: function(value, index, values) {
-                                return value + 'h';
-                            }
-                        }
-                    },
-                    y: {
-                        type: 'linear',
-                        position: 'left',
-                        min: 0,
-                        max: 7,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
-        </script>
-
-        <script>
             // Coordonnées de l'origine
             var x1 = 8;
             var y1 = 0;
@@ -249,7 +177,7 @@
 
             console.log("Coordonnées des mouvements :", mouvements);
             // Dessiner la courbe linéaire
-            var ctx1 = document.getElementById('graphique2-{{ forloop.counter }}').getContext('2d');
+            var ctx1 = document.getElementById('graphique1-{{ forloop.counter }}').getContext('2d');
             var chart1 = new Chart(ctx1, {
                 type: 'line',
                 data: {
@@ -292,13 +220,93 @@
                             type: 'linear',
                             position: 'left',
                             min: 0,
-                            max: 7,
+                            max: 10,
                             ticks: {
                                 stepSize: 1
                             }
                         }
                     }
                 }
+            });
+        </script>
+
+
+        <script>
+            $(document).ready(function () {
+                // Récupérer la liste des dates des jours de la semaine en cours, en commençant par le lundi
+                var datesSemaineEnCours = [];
+                var dateCourante = moment().startOf('isoWeek');
+                for (var i = 0; i < 5; i++) { // Nous supposons ici que la semaine de travail comprend 5 jours (du lundi au vendredi)
+                    datesSemaineEnCours.push(dateCourante.format('DD MMMM YYYY'));
+                    dateCourante.add(1, 'days');
+                }
+
+                var premierJourSemaine = datesSemaineEnCours[0]; // Première date de la semaine en cours (lundi)
+                var dernierJourSemaine = datesSemaineEnCours[datesSemaineEnCours.length - 1]; // Dernière date de la semaine en cours (vendredi)
+
+                // Coordonnées de l'origine
+                var x1 = premierJourSemaine;
+                var y1 = 0;
+
+                // Coordonnées de la destination (objectif_hebdo/10, 18h) si objectif_hebdo est défini, sinon (0, 18h)
+                var objectif_hebdo = {{ produit_data.objectif_hebdo.quantite }};
+                var x2 = dernierJourSemaine;
+                var y2 = objectif_hebdo ? objectif_hebdo : 0;
+
+                // Récupérer les totaux des mouvements par jour et les formater en tant que nombres
+                var totauxMouvementsParJour = [
+                    {% for mouvement_par_jour in produit_data.mouvements_par_jour %}
+                        {{ mouvement_par_jour.total_ach }},
+                    {% endfor %}
+                ];
+
+                // Dessiner la courbe linéaire
+                var ctx = document.getElementById('graphique2-{{ forloop.counter }}').getContext('2d');
+                var chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: datesSemaineEnCours, // Utiliser les dates des jours de la semaine comme labels
+                        datasets: [
+                            {
+                                label: 'Mouvement hebdomadaire',
+                                data: totauxMouvementsParJour, // Utiliser les totaux des mouvements par jour
+                                borderColor: 'green',
+                                borderWidth: 2,
+                                fill: false
+                            },
+                            {
+                                label: 'Courbe linéaire',
+                                data: [
+                                    { x: x1, y: y1 },
+                                    { x: x2, y: y2 }
+                                ],
+                                borderColor: 'blue',
+                                borderWidth: 2,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                type: 'category', // Utiliser une échelle de catégorie pour les dates
+                                position: 'bottom',
+                                ticks: {
+                                    autoSkip: false // Pour afficher toutes les dates des jours de la semaine
+                                }
+                            },
+                            y: {
+                                type: 'linear',
+                                position: 'left',
+                                min: 0,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
             });
         </script>
         <br><br>
