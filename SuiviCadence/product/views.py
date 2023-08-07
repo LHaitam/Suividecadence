@@ -110,6 +110,7 @@ def produit(request, produit_id):
         reste_a_faire = math.floor(float(dernier_objectif_hebdo.quantite - progression_theorique) * 10) / 10
 
         # Récupérer l'objectif hebdomadaire de la semaine courante
+
         objectif_semaine_courante = ObjectifHebdo.objects.filter(
             produit=produit,
             numero_semaine=date.isocalendar()[1]
@@ -649,7 +650,7 @@ def supprimer_mouvement(request, mouvement_id):
 
 def liste_objectifs_hebdo(request):
     # Récupérer tous les objectifs hebdomadaires de la base de données
-    objectifs = ObjectifHebdo.objects.all()
+    objectifs = ObjectifHebdo.objects.all().order_by('-date_debut')
 
     # Préparer le contexte pour le rendu du template avec la liste des objectifs
     context = {
