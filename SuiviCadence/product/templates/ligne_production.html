@@ -22,8 +22,9 @@
         .container {
             display: flex;
             flex-direction: column;
-            height: 110vh;
+            height: 80px;
             padding: 10px;
+            align-items: center;
         }
 
         .conteneur-interieur {
@@ -83,6 +84,8 @@
             align-items: center;
             border-radius: 5px;
             padding: 10px;
+            width: 500px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
         }
 
         h2 {
@@ -95,7 +98,7 @@
 
     <!-- Conteneur extérieur -->
     <div class="container">
-        <div class="title">Détails de la ligne de production </div> </br></br>
+<!--         <div class="title">Détails de la ligne de production </div> </br></br> -->
         <div class="s-container">
             <h2>Production RFM Semaine {{ numero_semaine }}</h2>
         </div>
@@ -175,6 +178,16 @@
                 {% endfor %}
             ];
 
+            // Récupérer les cumuls des mouvements par heure et les calculer
+            // Récupérer les cumuls des mouvements par heure et les calculer
+            var cumulsMouvementsParHeure = [];
+            var cumul = 0;
+            for (var i = 0; i < mouvements.length; i++) {
+                cumul += mouvements[i].y; // Utiliser les coordonnées y des mouvements pour le cumul
+                cumulsMouvementsParHeure.push({ x: mouvements[i].x, y: cumul }); // Ajouter le cumul dans le tableau
+            }
+
+
             console.log("Coordonnées des mouvements :", mouvements);
             // Dessiner la courbe linéaire
             var ctx1 = document.getElementById('graphique1-{{ forloop.counter }}').getContext('2d');
@@ -199,6 +212,13 @@
                             borderColor: 'green',
                             borderWidth: 2,
                             fill: false
+                        },
+                        {
+                        label: 'Cumul des mouvements',
+                        data: cumulsMouvementsParHeure, // Utiliser les cumuls des mouvements par jour
+                        borderColor: 'red',
+                        borderWidth: 2,
+                        fill: false
                         }
                     ]
                 },
@@ -220,7 +240,7 @@
                             type: 'linear',
                             position: 'left',
                             min: 0,
-                            max: 10,
+
                             ticks: {
                                 stepSize: 1
                             }
@@ -260,6 +280,14 @@
                     {% endfor %}
                 ];
 
+                // Récupérer les cumuls des mouvements par jour et les calculer
+                var cumulsMouvementsParJour = [];
+                var cumul = 0;
+                for (var i = 0; i < totauxMouvementsParJour.length; i++) {
+                    cumul += totauxMouvementsParJour[i];
+                    cumulsMouvementsParJour.push(cumul);
+                }
+
                 // Dessiner la courbe linéaire
                 var ctx = document.getElementById('graphique2-{{ forloop.counter }}').getContext('2d');
                 var chart = new Chart(ctx, {
@@ -275,12 +303,19 @@
                                 fill: false
                             },
                             {
-                                label: 'Courbe linéaire',
+                                label: 'Objectif',
                                 data: [
                                     { x: x1, y: y1 },
                                     { x: x2, y: y2 }
                                 ],
                                 borderColor: 'blue',
+                                borderWidth: 2,
+                                fill: false
+                            },
+                            {
+                                label: 'Cumul des mouvements',
+                                data: cumulsMouvementsParJour, // Utiliser les cumuls des mouvements par jour
+                                borderColor: 'red',
                                 borderWidth: 2,
                                 fill: false
                             }

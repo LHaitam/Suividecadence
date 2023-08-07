@@ -94,11 +94,10 @@ class MouvementTempsReel(models.Model):
     date_heure = models.DateTimeField(auto_now_add=True)
     quantite = models.IntegerField()
     utilisateur = models.ForeignKey(User, on_delete=models.CASCADE)
-    soustraction = models.BooleanField(default=False)
 
     def __str__(self):
-        mouvement_type = "Soustraction" if self.soustraction else "Addition"
-        return f"{mouvement_type} de {self.quantite} unité(s) - Produit : {self.produit.nom} - Date : {self.date_heure}"
+        return f"Ajout de {self.quantite} unité(s) - Produit : {self.produit.nom} - Date : {self.date_heure}"
+
 
 
 ##########################################################################################################################################################

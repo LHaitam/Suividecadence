@@ -11,7 +11,7 @@
             <tr>
                 <th>Référence</th>
                 <th>Nom</th>
-                <th>TKT Théo</th>
+                <th>Ligne Production</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -20,7 +20,7 @@
             <tr>
                 <td>{{ produit.reference }}</td>
                 <td>{{ produit.nom }}</td>
-                <td>{{ takt_theo }}</td>
+                <td>{{ produit.ligne_production.nom }}</td>
                 <td>
                     <a href="{% url 'produit' produit.pk %}"><button class="voir">Voir Détails</button></a>
                     <a href="{% url 'modifier_produit' produit.pk %}"><button class="modifier">Modifier</button></a>

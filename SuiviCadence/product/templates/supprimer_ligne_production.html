@@ -69,12 +69,13 @@
 </style>
 <div class="container">
     <div class="title">Supprimer le produit</div> </br></br>
-    <p>Voulez-vous vraiment supprimer le produit "{{ produit.nom }}" ?</p>
+    <p>Voulez-vous vraiment supprimer la ligne "{{ ligne_production.nom }}" ?</p>
+    <p>PS: En cas de confirmation ça supprimera tout les produits qui appartiennent a cette ligne</p>
     <form method="post" style="display: inline;">
         {% csrf_token %}
         <button type="submit" class="supprimer">Confirmer</button>
     </form>
-    <a href="{% url 'liste_ligne_production' %}">
+    <a href="{% url 'liste_lignes_production' %}">
         <button class="annuler">Annuler</button>
     </a>
 </div>

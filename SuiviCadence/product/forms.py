@@ -81,9 +81,8 @@ class MouvementForm(forms.ModelForm):
         widgets = {
             'quantite': forms.NumberInput(attrs={'class': 'form-control'}),
             'commentaire': forms.TextInput(attrs={'class': 'form-control'}),
-            'soustraction': forms.CheckboxInput(),  # Ajoutez cette ligne pour la case à cocher
         }
-        
+
 
 ####################################################################################################################
 #Objectif Hebdo form 
@@ -92,15 +91,17 @@ class MouvementForm(forms.ModelForm):
 class ObjectifHebdoForm(forms.ModelForm):
     class Meta:
         model = ObjectifHebdo
-        fields = ('produit', 'date_debut', 'date_fin', 'quantite')
+        fields = ('produit', 'client', 'date_debut', 'date_fin', 'quantite')
         labels = {
             'produit': 'Produit',
+            'client': 'Client',
             'date_debut': 'Date de début',
             'date_fin': 'Date de fin',
             'quantite': 'Quantité hebdomadaire',
         }
         widgets = {
             'produit': forms.Select(attrs={'class': 'form-control'}),
+            'client': forms.Select(attrs={'class': 'form-control'}),
             'date_debut': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'date_fin': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'quantite': forms.NumberInput(attrs={'class': 'form-control'}),

@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from django.db.models import Sum, Q, OuterRef, Subquery
 from .forms import EtatLigneForm, LigneProductionForm, MouvementForm, ObjectifHebdoForm, ProduitForm
 from django.http import Http404, HttpRequest
+from django.utils import timezone
 
 
 
@@ -17,12 +18,11 @@ from django.http import Http404, HttpRequest
 # Vue du Produit 
 
 
-
-
 def produit(request, produit_id):
     try:
         produit = get_object_or_404(Produit, pk=produit_id)
         date = datetime.now()
+        date = timezone.localtime()
 
         # Récupérer l'objectif hebdomadaire courant du produit
         dernier_objectif_hebdo = ObjectifHebdo.objects.filter(produit=produit).first()
@@ -113,17 +113,25 @@ def produit(request, produit_id):
         objectif_semaine_courante = ObjectifHebdo.objects.filter(
             produit=produit,
             numero_semaine=date.isocalendar()[1]
-        ).first()
+        ).last()
 
         # Récupérer les mouvements du produit par heure pour le jour courant
 
-        mouvements_par_heure = MouvementTempsReel.objects.filter(
+        """ mouvements_par_heure = MouvementTempsReel.objects.filter(
             produit=produit,
             date_heure__date=date.date()
+        ).values('date_heure').annotate(total_ach=Sum('quantite')) """
+
+        mouvements_par_heure = MouvementTempsReel.objects.filter(
+            produit=produit, 
+            date_heure__date=date.date()
         ).values('date_heure').annotate(total_ach=Sum('quantite'))
+                
 
         # Convertir les données formatées en tuples (heure, total_ach)
         mouvements_format = [(mouvement['date_heure'].hour, mouvement['total_ach']) for mouvement in mouvements_par_heure]
+
+        
         
         context = {
             'date': date,
@@ -132,6 +140,7 @@ def produit(request, produit_id):
             'debut_semaine': dernier_objectif_hebdo.date_debut,
             'fin_semaine': dernier_objectif_hebdo.date_fin,
             'objectif_hebdo': dernier_objectif_hebdo,
+            'objectif_semaine_courante':objectif_semaine_courante,
             'takt_theorique': takt_theorique,
             'takt_reel': takt_reel,
             'progression_theorique': progression_theorique,
@@ -150,7 +159,7 @@ def produit(request, produit_id):
     except Produit.DoesNotExist:
         # Gérer l'exception si le produit n'existe pas
         return render(request, 'produit_inexistant.html')
-    
+
 ####################################################################################################################
 #Vue Liste des Produits
 
@@ -178,8 +187,6 @@ def liste_produits(request):
 
     # Rendre le template avec la liste des produits et le contexte
     return render(request, 'liste_produits.html', context)
-
-
 
 
 ####################################################################################################################
@@ -243,6 +250,7 @@ def modifier_produit(request, produit_id):
 
     # Rendre le template avec le formulaire et le contexte
     return render(request, 'modifier_produit.html', context)
+
 
 ####################################################################################################################
 #Vue pour modifier Produit
@@ -352,7 +360,10 @@ def details_ligne_production(request, ligne_production_id):
 
         objectif_semaine_courante = ObjectifHebdo.objects.filter(produit=produit, numero_semaine=date.isocalendar()[1]).first()
 
-        mouvements_par_heure = MouvementTempsReel.objects.filter(produit=produit, date_heure__date=date.date()).values('date_heure__hour').annotate(total_ach=Sum('quantite'))
+        mouvements_par_heure = MouvementTempsReel.objects.filter(
+            produit=produit, 
+            date_heure__date=date.date()
+            ).values('date_heure__hour').annotate(total_ach=Sum('quantite'))
         mouvements_format = [(mouvement['date_heure__hour'], mouvement['total_ach']) for mouvement in mouvements_par_heure]
 
         liste_produits.append(
@@ -486,7 +497,7 @@ def modifier_ligne_production(request, pk):
 
 
 def supprimer_ligne_production(request, pk):
-    try:
+
         # Récupérer la ligne de production existante en fonction de la clé primaire (pk) passée dans l'URL
         ligne_production = get_object_or_404(LigneProd, pk=pk)
 
@@ -505,13 +516,6 @@ def supprimer_ligne_production(request, pk):
 
         # Rendre le template de confirmation de suppression avec le contexte
         return render(request, 'supprimer_ligne_production.html', context)  # Correction du nom du template ici
-    
-    except Exception as e:
-        # Gérer toutes les autres exceptions non spécifiées ci-dessus
-        # Par exemple, si une erreur de base de données se produit, une erreur 500 sera renvoyée
-        # Vous pouvez personnaliser la gestion des exceptions ici en fonction de vos besoins
-        raise Http404("Une erreur s'est produite lors de la suppression de la ligne de production.")
-
 
 
 ####################################################################################################################
@@ -553,6 +557,8 @@ def modifier_etat_ligne(request, pk):
         # Vous pouvez personnaliser la gestion des exceptions ici en fonction de vos besoins
         raise Http404("Une erreur s'est produite lors de la modification de l'état de la ligne de production.")
 
+
+####################################################################################################################
 
 ####################################################################################################################
 #Vue pour lister Mouvement
@@ -636,6 +642,8 @@ def supprimer_mouvement(request, mouvement_id):
 
 
 ####################################################################################################################
+
+####################################################################################################################
 #Vue pour lister Objectif Hebdo
 
 
@@ -666,7 +674,7 @@ def ajouter_objectif_hebdo(request):
                 # Sauvegarder le nouvel objectif hebdomadaire dans la base de données
                 objectif_hebdo = form.save()
                 # Rediriger l'utilisateur vers la page de détails du nouvel objectif hebdomadaire
-                return redirect('liste_objectifs_hebdo', pk=objectif_hebdo.pk)
+                return redirect('liste_objectifs_hebdo')
 
         else:
             # Si la requête n'est pas de type POST, créer une instance vide du formulaire
@@ -706,7 +714,7 @@ def modifier_objectif_hebdo(request, pk):
                 # Sauvegarder les modifications de l'objectif hebdomadaire dans la base de données
                 form.save()
                 # Rediriger l'utilisateur vers la page de détails de l'objectif hebdomadaire modifié
-                return redirect('details_objectif_hebdo', pk=pk)
+                return redirect('liste_objectifs_hebdo')
 
         else:
             # Si la requête n'est pas de type POST, créer une instance du formulaire avec les données de l'objectif hebdomadaire existant

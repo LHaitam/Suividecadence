@@ -10,7 +10,7 @@
     <!-- Inclure la bibliothèque Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Inclure la bibliothèque Moment.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment-with-locales.min.js"></script>
 
 
 
@@ -26,7 +26,7 @@
         .container {
             display: flex;
             flex-direction: column;
-            height: 100%;
+            height: 80%;
         }
 
         .partie1, .partie2, .partie3 {
@@ -63,18 +63,17 @@
 </head>
 <body>
     <div class="container">
-        <div class="title">Détails du produit </div> </br></br>
+        
         <div class="partie1">
             <div class="sous-partie"></div>
             <div class="sous-partie">
                 <h2>Production RFM Semaine  {{ numero_semaine }}</h2>
                 {% if produit.photo %}
-                    <img src="{% static 'images/'%}{{ produit.photo }}" alt="{{ produit.nom }}" height="300">  
+                    <img src="{% static 'images/'%}{{ produit.photo }}" alt="{{ produit.nom }}" height="200">  
                 {% else %}
                     <p>Aucune image disponible pour ce produit.</p>
                 {% endif %}
-               
-                <h3>{{ produit.reference }}</h3>
+
                 <h3>{{ produit.nom }}</h3>
             </div>
             <div class="sous-partie"></div>
@@ -94,14 +93,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% if produit.objectif_hebdo %}
+                        {% if objectif_semaine_courante %}
                             <tr>
-                                <td>{{ objectif_hebdo.client }}</td>
-                                <td>{{ objectif_hebdo.date_debut }}</td>
-                                <td>{{ objectif_hebdo.date_fin }}</td>
-                                <td>{{ objectif_hebdo.quantite }}</td>
-                                <td><a href="{% url 'modifier_objectif_hebdo' objectif_hebdo.id %}">Modifier</a></td>
-                                <td><a href="{% url 'supprimer_objectif_hebdo' objectif_hebdo.id %}">Supprimer</a></td>
+                                <td>{{ objectif_semaine_courante.client }}</td>
+                                <td>{{ objectif_semaine_courante.date_debut }}</td>
+                                <td>{{ objectif_semaine_courante.date_fin }}</td>
+                                <td>{{ objectif_semaine_courante.quantite }}</td>
+                                <td><a href="{% url 'modifier_objectif_hebdo' objectif_semaine_courante.id %}">Modifier</a></td>
+                                <td><a href="{% url 'supprimer_objectif_hebdo' objectif_semaine_courante.id %}">Supprimer</a></td>
                             </tr>
                         {% else %}
                             <tr>
@@ -109,8 +108,8 @@
                             </tr>
                         {% endif %}
                     </tbody>
-                    
                 </table>
+                
 
 
             </div>
@@ -167,9 +166,20 @@
             // Récupérer les mouvements du produit par heure et les formater en tant que nombres
             var mouvements = [
                 {% for mouvement in mouvements_par_heure %}
-                    { x: {{ mouvement.0 }}, y: {{ mouvement.1 }} },
+                    { x: {{ mouvement.0 }} + 1 , y: {{ mouvement.1 }} },
                 {% endfor %}
             ];
+
+
+            // Récupérer les cumuls des mouvements par heure et les calculer
+            // Récupérer les cumuls des mouvements par heure et les calculer
+            var cumulsMouvementsParHeure = [];
+            var cumul = 0;
+            for (var i = 0; i < mouvements.length; i++) {
+                cumul += mouvements[i].y; // Utiliser les coordonnées y des mouvements pour le cumul
+                cumulsMouvementsParHeure.push({ x: mouvements[i].x, y: cumul }); // Ajouter le cumul dans le tableau
+            }
+
     
             // Dessiner la courbe linéaire
             var ctx = document.getElementById('graphique1').getContext('2d');
@@ -194,7 +204,14 @@
                             borderColor: 'green',
                             borderWidth: 2,
                             fill: false
-                        }
+                        },
+                        {
+                        label: 'Cumul des mouvements',
+                        data: cumulsMouvementsParHeure, // Utiliser les cumuls des mouvements par jour
+                        borderColor: 'red',
+                        borderWidth: 2,
+                        fill: false
+                    }
                     ]
                 },
                 options: {
@@ -215,7 +232,6 @@
                             type: 'linear',
                             position: 'left',
                             min: 0,
-                            max: 10,
                             ticks: {
                                 stepSize: 1
                             }
@@ -227,99 +243,106 @@
     </script>
 
 
-<script>
-    $(document).ready(function () {
-        // Récupérer la liste des dates des jours de la semaine en cours, en commençant par le lundi
-        var datesSemaineEnCours = [];
-        var dateCourante = moment().startOf('isoWeek');
-        for (var i = 0; i < 5; i++) { // Nous supposons ici que la semaine de travail comprend 5 jours (du lundi au vendredi)
-            datesSemaineEnCours.push(dateCourante.format('DD MMMM YYYY'));
-            dateCourante.add(1, 'days');
-        }
+    <script>
+        $(document).ready(function () {
+            // Définir la localisation en français pour moment.js
+            moment.locale('fr');
 
-        var premierJourSemaine = datesSemaineEnCours[0]; // Première date de la semaine en cours (lundi)
-        var dernierJourSemaine = datesSemaineEnCours[datesSemaineEnCours.length - 1]; // Dernière date de la semaine en cours (vendredi)
+            // Récupérer la liste des dates des jours de la semaine en cours, en commençant par le lundi
+            var datesSemaineEnCours = [];
+            var dateCourante = moment().startOf('isoWeek');
+            for (var i = 0; i < 5; i++) { // Nous supposons ici que la semaine de travail comprend 5 jours (du lundi au vendredi)
+                datesSemaineEnCours.push(dateCourante.format('DD MMMM YYYY'));
+                dateCourante.add(1, 'days');
+            }
 
-        // Coordonnées de l'origine
-        var x1 = premierJourSemaine;
-        var y1 = 0;
 
-        // Coordonnées de la destination (objectif_hebdo/10, 18h) si objectif_hebdo est défini, sinon (0, 18h)
-        var objectif_hebdo = {{ objectif_hebdo.quantite }};
-        var x2 = dernierJourSemaine;
-        var y2 = objectif_hebdo ? objectif_hebdo : 0;
+            var premierJourSemaine = datesSemaineEnCours[0]; // Première date de la semaine en cours (lundi)
+            var dernierJourSemaine = datesSemaineEnCours[datesSemaineEnCours.length - 1]; // Dernière date de la semaine en cours (vendredi)
 
-        // Récupérer les totaux des mouvements par jour et les formater en tant que nombres
-        var totauxMouvementsParJour = [
-            {% for mouvement_par_jour in mouvements_par_jour %}
-                {{ mouvement_par_jour.total_ach }},
-            {% endfor %}
-        ];
+            // Coordonnées de l'origine
+            var x1 = premierJourSemaine;
+            var y1 = 0;
 
-        // Récupérer les cumuls des mouvements par jour et les calculer
-        var cumulsMouvementsParJour = [];
-        var cumul = 0;
-        for (var i = 0; i < totauxMouvementsParJour.length; i++) {
-            cumul += totauxMouvementsParJour[i];
-            cumulsMouvementsParJour.push(cumul);
-        }
+            // Coordonnées de la destination (objectif_hebdo/10, 18h) si objectif_hebdo est défini, sinon (0, 18h)
+            var objectif_hebdo = {{ objectif_hebdo.quantite }};
+            var x2 = dernierJourSemaine;
+            var y2 = objectif_hebdo ? objectif_hebdo : 0;
 
-        // Dessiner la courbe linéaire avec les trois courbes
-        var ctx = document.getElementById('graphique2').getContext('2d');
-        var chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: datesSemaineEnCours, // Utiliser les dates des jours de la semaine comme labels
-                datasets: [
-                    {
-                        label: 'Mouvement hebdomadaire',
-                        data: totauxMouvementsParJour, // Utiliser les totaux des mouvements par jour
-                        borderColor: 'green',
-                        borderWidth: 2,
-                        fill: false
-                    },
-                    {
-                        label: 'Courbe linéaire',
-                        data: [
-                            { x: x1, y: y1 },
-                            { x: x2, y: y2 }
-                        ],
-                        borderColor: 'blue',
-                        borderWidth: 2,
-                        fill: false
-                    },
-                    {
-                        label: 'Cumul des mouvements',
-                        data: cumulsMouvementsParJour, // Utiliser les cumuls des mouvements par jour
-                        borderColor: 'red',
-                        borderWidth: 2,
-                        fill: false
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        type: 'category', // Utiliser une échelle de catégorie pour les dates
-                        position: 'bottom',
-                        ticks: {
-                            autoSkip: false // Pour afficher toutes les dates des jours de la semaine
+            // Récupérer les totaux des mouvements par jour et les formater en tant que nombres
+            var totauxMouvementsParJour = [
+                {% for mouvement_par_jour in mouvements_par_jour %}
+                    {{ mouvement_par_jour.total_ach }},
+                {% endfor %}
+                
+            ];
+
+            console.log(totauxMouvementsParJour);
+
+            // Récupérer les cumuls des mouvements par jour et les calculer
+            var cumulsMouvementsParJour = [];
+            var cumul = 0;
+            for (var i = 0; i < totauxMouvementsParJour.length; i++) {
+                cumul += totauxMouvementsParJour[i];
+                cumulsMouvementsParJour.push(cumul);
+            }
+
+            // Dessiner la courbe linéaire avec les trois courbes
+            var ctx = document.getElementById('graphique2').getContext('2d');
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: datesSemaineEnCours, // Utiliser les dates des jours de la semaine comme labels (en français)
+                    datasets: [
+                        {
+                            label: 'Mouvement hebdomadaire',
+                            data: totauxMouvementsParJour, // Utiliser les totaux des mouvements par jour
+                            borderColor: 'green',
+                            borderWidth: 2,
+                            fill: false
+                        },
+                        {
+                            label: 'Courbe linéaire',
+                            data: [
+                                { x: x1, y: y1 },
+                                { x: x2, y: y2 }
+                            ],
+                            borderColor: 'blue',
+                            borderWidth: 2,
+                            fill: false
+                        },
+                        {
+                            label: 'Cumul des mouvements',
+                            data: cumulsMouvementsParJour, // Utiliser les cumuls des mouvements par jour
+                            borderColor: 'red',
+                            borderWidth: 2,
+                            fill: false
                         }
-                    },
-                    y: {
-                        type: 'linear',
-                        position: 'left',
-                        min: 0,
-                        ticks: {
-                            stepSize: 1
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'category', // Utiliser une échelle de catégorie pour les dates
+                            position: 'bottom',
+                            ticks: {
+                                autoSkip: false // Pour afficher toutes les dates des jours de la semaine
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            min: 0,
+                            ticks: {
+                                stepSize: 1
+                            }
                         }
                     }
                 }
-            }
+            });
         });
-    });
-</script>
+    </script>
 
 
 

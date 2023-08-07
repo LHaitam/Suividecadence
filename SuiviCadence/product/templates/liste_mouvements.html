@@ -13,7 +13,6 @@
                 <th>Date et heure</th>
                 <th>Quantité</th>
                 <th>Utilisateur</th>
-                <th>Type de mouvement</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -24,7 +23,6 @@
                 <td>{{ mouvement.date_heure }}</td>
                 <td>{{ mouvement.quantite }}</td>
                 <td>{{ mouvement.utilisateur.username }}</td>
-                <td>{% if mouvement.soustraction %}Soustraction{% else %}Addition{% endif %}</td>
                 <td>
                     <a href="{% url 'modifier_mouvement' mouvement_id=mouvement.pk %}"><button class="modifier">Modifier</button></a>
                     <a href="{% url 'supprimer_mouvement' mouvement_id=mouvement.pk %}"><button class="supprimer" >Supprimer</button></a>
