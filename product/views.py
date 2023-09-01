@@ -107,7 +107,7 @@ def produit(request, produit_id):
         total_mouvements_aujourdhui = mouvements_jusqua_present.aggregate(Sum('total_ach'))['total_ach__sum']
 
         # Calcul du reste à faire
-        reste_a_faire = math.floor(float(dernier_objectif_hebdo.quantite - progression_theorique) * 10) / 10
+        reste_a_faire = math.floor(float(dernier_objectif_hebdo.quantite - total_realise) * 10) / 10
 
         # Récupérer l'objectif hebdomadaire de la semaine courante
 
