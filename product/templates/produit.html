@@ -1,0 +1,292 @@
+{% extends 'base_template.html' %}
+{% load static %}
+
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Inclure la bibliothèque Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Inclure la bibliothèque Moment.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment-with-locales.min.js"></script>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+
+
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Diviser horizontalement en trois parties */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 80%;
+        }
+
+        .partie1, .partie2, .partie3 {
+            flex: 1;
+            display: flex;
+            flex-direction: row; /* Modification ici pour afficher les sous-parties verticalement */
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Diviser verticalement la partie 1 en trois */
+        .partie1 .sous-partie {
+            flex: 1;
+            margin: 10px;
+        }
+
+        /* Diviser la partie 2 en deux (1/3 et 2/3) */
+        .partie2 .sous-partie1 {
+            flex: 1;
+            margin: 10px;
+        }
+
+        .partie2 .sous-partie2 {
+            flex: 2;
+            margin: 10px;
+        }
+
+        /* Diviser la partie 3 en deux */
+        .partie3 .sous-partie {
+            flex: 1;
+            margin: 10px;
+        }
+
+        #hourlyChart {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="partie1">
+            <div class="sous-partie"></div>
+            <div class="sous-partie">
+                <h2>Production RFM Semaine  {{ numero_semaine }}</h2>
+                {% if produit.photo %}
+                    <img src="{% static 'images/'%}{{ produit.photo }}" alt="{{ produit.nom }}" height="200">  
+                {% else %}
+                    <p>Aucune image disponible pour ce produit.</p>
+                {% endif %}
+
+                <h3>{{ produit.nom }}</h3>
+            </div>
+            <div class="sous-partie"></div>
+        </div>
+        <div class="partie2">
+            <div class="sous-partie1">
+
+                <table id="tbl" class="content-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Date de début</th>
+                            <th>Date de fin</th>
+                            <th>Quantité</th>
+                            <th>Modifier</th>
+                            <th>Supprimer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if objectif_semaine_courante %}
+                            <tr>
+                                <td>{{ objectif_semaine_courante.client }}</td>
+                                <td>{{ objectif_semaine_courante.date_debut }}</td>
+                                <td>{{ objectif_semaine_courante.date_fin }}</td>
+                                <td>{{ objectif_semaine_courante.quantite }}</td>
+                                <td><a href="{% url 'modifier_objectif_hebdo' objectif_semaine_courante.id %}">Modifier</a></td>
+                                <td><a href="{% url 'supprimer_objectif_hebdo' objectif_semaine_courante.id %}">Supprimer</a></td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6">Aucun objectif hebdomadaire défini pour cette semaine.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+                
+
+
+            </div>
+            <div class="sous-partie2">
+                
+                        <table id="tbl" class="content-table">
+                            <thead>
+                                <tr>
+                                    <th>Takt théorique (h)</th>
+                                    <th>Takt Réel</th>
+                                    <th>Objectif Semaine</th>
+                                    <th>Progression théorique</th>
+                                    <th>Réalisé</th>
+                                    <th>Reste à faire</th>
+                                    <th>Retard</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ takt_theorique }}</td>
+                                    <td>{{ takt_reel }}</td>
+                                    <td>{{ objectif_hebdo.quantite }}</td>
+                                    <td>{{ progression_theorique }}</td>
+                                    <td>{{ total_realise }}</td>
+                                    <td>{{ reste_a_faire }}</td>
+                                    <td>{{ retard }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+        <div class="partie3">
+            <div class="sous-partie">
+                <div id="hourlyChart"></div>
+
+            </div>
+            <div class="sous-partie">
+                <div id="dailyChart"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- script pour dessiner le graph des mouvements par heure -->
+    <script>
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+    
+        function drawChart() {
+            // Récupérez la date actuelle
+            const currentDate = new Date();
+            const formattedDate = currentDate.toLocaleDateString('fr-FR');
+
+            // Utilisez le contexte JSON généré par Django pour alimenter les données ici
+            const mouvementsParHeure = JSON.parse('{{ mouvements_par_heure|safe }}');
+
+            const data = new google.visualization.DataTable();
+            data.addColumn('datetime', 'Time');
+            data.addColumn('number', 'Quantité');
+            data.addColumn('number', 'Cumulé de la Quantité');
+
+            let cumulativeQuantity = 0;
+            const dataArray = mouvementsParHeure.map(mouvement => {
+                const [hour, minute] = mouvement[0].split(':');
+                cumulativeQuantity += mouvement[1];
+                // Utilisez la date actuelle avec l'heure du mouvement
+                return [new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), parseInt(hour), parseInt(minute)), mouvement[1], cumulativeQuantity];
+            });
+
+            data.addRows(dataArray);
+
+            const options = {
+                hAxis: {
+                    title: 'Heure',
+                    format: 'HH:mm', // Format pour afficher uniquement l'heure
+                    viewWindow: {
+                        min: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 8, 0),
+                        max: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 18, 0)
+                    }
+                },
+                vAxis: {
+                    title: 'Quantité',
+                    minValue: 0
+                },
+                title:'Mouvement Par Heure',
+                legend: { position: 'bottom' }, // Position des légendes
+                chartArea: { width: '80%', height: '50%' },
+                tooltip: { isHtml: true }, // Permet d'utiliser du HTML personnalisé dans le tooltip
+                pointSize: 5, // Ajustez la taille des points ici (plus grand)
+                series: {
+                    0: { color: 'red', label: 'Courbe Rouge', pointShape: 'circle' },
+                    1: { color: 'green', label: 'Courbe Bleue', pointShape: 'circle' }
+                }
+            };
+
+            const chart = new google.visualization.LineChart(document.getElementById('hourlyChart'));
+            chart.draw(data, options);
+        }
+
+    </script> 
+    
+    <!-- script pour dessiner le graph des mouvements par jour -->
+    <script>
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+    
+        function drawChart() {
+            // Utilisez la variable JSON générée par Django pour alimenter les données ici
+            const dataArrayDaily = {{ mouvements_par_jour|safe }};
+            console.log('dataArrayDaily:', dataArrayDaily);
+    
+            const dataDaily = new google.visualization.DataTable();
+            dataDaily.addColumn('date', 'Date');
+            dataDaily.addColumn('number', 'Quantité');
+            dataDaily.addColumn('number', 'Cumulé de la Quantité');
+    
+            let cumulativeQuantity = 0;
+    
+            dataArrayDaily.forEach(mouvement => {
+                console.log('mouvement:', mouvement);
+                const dateParts = mouvement.date_heure__date.split('-');
+                cumulativeQuantity += mouvement.total_ach;
+                const formattedDate = new Date(`${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`);
+                dataDaily.addRow([formattedDate, mouvement.total_ach, cumulativeQuantity]);
+            });
+    
+            // Créez manuellement un tableau de dates pour les jours de la semaine de travail (du lundi au vendredi)
+            var datesSemaineEnCours = [];
+            var dateCourante = new Date(); // Date actuelle
+    
+            for (var i = 0; i < 5; i++) { // Nous supposons ici que la semaine de travail comprend 5 jours (du lundi au vendredi)
+                datesSemaineEnCours.push(new Date(dateCourante)); // Ajoutez la date au tableau
+                dateCourante.setDate(dateCourante.getDate() - 1); // Décrémentez la date d'un jour
+            }
+    
+            // Inversez l'ordre des dates pour avoir l'ordre correct (du lundi au vendredi)
+            datesSemaineEnCours.reverse();
+    
+            const optionsDaily = {
+                hAxis: {
+                    title: 'Date',
+                    format: 'yyyy-MM-dd', // Format des dates pour l'axe des x
+                    ticks: datesSemaineEnCours // Utilisez les dates de la semaine de travail comme étiquettes d'axe
+                },
+                vAxis: {
+                    title: 'Quantité',
+                    minValue: 0
+                },
+                title:'Mouvement Par Jour',
+                legend: { position: 'bottom' },
+                chartArea: { width: '80%', height: '50%' },
+                tooltip: { isHtml: true },
+                pointSize: 5,
+                series: {
+                    0: { color: 'red', label: 'Mouvements Quotidiens', pointShape: 'circle' },
+                    1: { color: 'green', label: 'Cumul des Mouvements', pointShape: 'circle' }
+                }
+            };
+    
+            const chartDaily = new google.visualization.LineChart(document.getElementById('dailyChart'));
+            chartDaily.draw(dataDaily, optionsDaily);
+        }
+    </script>
+    
+    
+    
+    
+
+    
+</body>
+</html>
+
+{% endblock %}
