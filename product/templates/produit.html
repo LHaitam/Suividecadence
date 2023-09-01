@@ -219,7 +219,7 @@
     </script> 
     
     <!-- script pour dessiner le graph des mouvements par jour -->
-    <script>
+     <script>
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(drawChart);
     
@@ -279,8 +279,94 @@
             const chartDaily = new google.visualization.LineChart(document.getElementById('dailyChart'));
             chartDaily.draw(dataDaily, optionsDaily);
         }
-    </script>
+    </script> 
     
+    
+    <!-- <script>
+        google.charts.load('current', { 'packages': ['corechart'] });
+        google.charts.setOnLoadCallback(drawChart);
+    
+        function drawChart() {
+            // Utilisez la variable JSON générée par Django pour alimenter les données ici
+            const dataArrayDaily = {{ mouvements_par_jour|safe }};
+            console.log('dataArrayDaily:', dataArrayDaily);
+    
+            const dataDaily = new google.visualization.DataTable();
+            dataDaily.addColumn('date', 'Date');
+            dataDaily.addColumn('number', 'Quantité');
+            dataDaily.addColumn('number', 'Cumulé de la Quantité');
+    
+            let cumulativeQuantity = 0;
+    
+            dataArrayDaily.forEach(mouvement => {
+                // Vérifiez si les données sont valides avant de les utiliser
+                if (mouvement.date_heure__date && mouvement.total_ach !== undefined) {
+                    const dateParts = mouvement.date_heure__date.split('-');
+                    cumulativeQuantity += mouvement.total_ach;
+                    const formattedDate = new Date(`${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`);
+                    dataDaily.addRow([formattedDate, mouvement.total_ach, cumulativeQuantity]);
+                }
+            });
+    
+            // Créez manuellement un tableau de dates pour les jours de la semaine de travail (du lundi au vendredi)
+            var datesSemaineEnCours = [];
+            var dateCourante = new Date(); // Date actuelle
+    
+            for (var i = 0; i < 5; i++) { // Nous supposons ici que la semaine de travail comprend 5 jours (du lundi au vendredi)
+                datesSemaineEnCours.push(new Date(dateCourante)); // Ajoutez la date au tableau
+                dateCourante.setDate(dateCourante.getDate() - 1); // Décrémentez la date d'un jour
+            }
+    
+            // Inversez l'ordre des dates pour avoir l'ordre correct (du lundi au vendredi)
+            datesSemaineEnCours.reverse();
+    
+            const optionsDaily = {
+                hAxis: {
+                    title: 'Date',
+                    format: 'yyyy-MM-dd', // Format des dates pour l'axe des x
+                    ticks: datesSemaineEnCours // Utilisez les dates de la semaine de travail comme étiquettes d'axe
+                },
+                vAxis: {
+                    title: 'Quantité',
+                    minValue: 0
+                },
+                title: 'Mouvement Par Jour',
+                legend: { position: 'bottom' },
+                chartArea: { width: '80%', height: '50%' },
+                tooltip: { isHtml: true },
+                pointSize: 5,
+                series: {
+                    0: { color: 'red', label: 'Mouvements Quotidiens', pointShape: 'circle' },
+                    1: { color: 'green', label: 'Cumul des Mouvements', pointShape: 'circle' }
+                }
+            };
+    
+            const chartDaily = new google.visualization.LineChart(document.getElementById('dailyChart'));
+            chartDaily.draw(dataDaily, optionsDaily);
+            
+            // Récupérez l'objectif hebdomadaire depuis votre contexte Django
+            const objectifHebdo = {{ produit.objectif_hebdo.quantite | default:1 }};
+            
+            // Récupérez le premier et le dernier jour de la semaine
+            const premierJourSemaine = datesSemaineEnCours[0];
+            const dernierJourSemaine = datesSemaineEnCours[datesSemaineEnCours.length - 1];
+            
+            // Créez un tableau contenant les deux points
+            const objectifHebdoData = [
+                [premierJourSemaine, 0],
+                [dernierJourSemaine, objectifHebdo]
+            ];
+            
+            // Créez une DataTable pour ces données
+            const objectifHebdoDataTable = new google.visualization.DataTable();
+            objectifHebdoDataTable.addColumn('date', 'Date');
+            objectifHebdoDataTable.addColumn('number', 'Objectif Hebdomadaire');
+            objectifHebdoDataTable.addRows(objectifHebdoData);
+            
+            const objectifHebdoChart = new google.visualization.LineChart(document.getElementById('objectifHebdoChart'));
+            objectifHebdoChart.draw(objectifHebdoDataTable, optionsDaily);
+        }
+    </script> -->
     
     
     
